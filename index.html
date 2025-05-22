@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Year 4 Mental Maths Assessment</title>
+    <style>
+        /* Global Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'OpenDyslexic', 'Comic Sans MS', 'Comic Sans', Arial, sans-serif;
+        }
+        html, body {
+            font-size: 20px;
+            background-color: #f0f7ff;
+            color: #222;
+        }
+        body {
+            line-height: 1.7;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            font-family: 'OpenDyslexic', 'Comic Sans MS', 'Comic Sans', Arial, sans-serif;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2.2em;
+        }
+        h2 {
+            font-size: 1.5em;
+        }
+        .btn {
+            font-size: 1.2em !important;
+            padding: 16px 28px;
+            border-radius: 10px;
+        }
+        .answer-item {
+            font-size: 1.1em !important;
+        }
+        /* Accessibility: Focus styles */
+        button:focus, input:focus {
+            outline: 3px solid #1976d2;
+            outline-offset: 2px;
+        }
+        /* Color-blind friendly cues */
+        .correct {
+            color: #388e3c;
+            font-weight: bold;
+        }
+        .incorrect {
+            color: #d32f2f;
+            font-weight: bold;
+        }
+        /* Avatar Selection Styles */
+        .avatar-selection {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .avatar-option {
+            text-align: center;
+            cursor: pointer;
+            padding: 10px;
+            border: 3px solid transparent;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+
+        .avatar-option:hover {
+            background-color: #e3f2fd;
+        }
+
+        .avatar-option.selected {
+            border-color: #2196f3;
+        }
+
+        .avatar-option img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+
+        /* Quiz Section Styles */
+        .quiz-section {
+            display: none;
+        }
+
+        .question-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #4caf50;
+            transition: width 0.3s;
+        }
+
+        .timer {
+            font-size: 1.2em;
+            color: #f44336;
+            margin: 10px 0;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            font-size: 1.2em;
+            width: 150px;
+            text-align: center;
+            margin: 10px auto;
+            display: block;
+            border: 2px solid #2196f3;
+            border-radius: 5px;
+        }
+
+        /* Results Section Styles */
+        .results-section {
+            display: none;
+        }
+
+        .answer-review {
+            margin: 20px 0;
+        }
+
+        /* Avatar Display */
+        .current-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 10px auto;
+            display: block;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+
+            .avatar-selection {
+                grid-template-columns: 1fr;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+
+        /* Accessibility: Increase font size and contrast for questions and answers */
+        .question-container h2, #question-text {
+            font-size: 2em !important;
+            color: #1a237e !important;
+            background: #e3f2fd !important;
+            border-radius: 8px;
+            padding: 10px 0;
+        }
+        #answer-input {
+            font-size: 1.5em !important;
+            background: #fffde7 !important;
+            color: #263238 !important;
+            border: 2px solid #1976d2 !important;
+        }
+        .answer-item {
+            font-size: 1.1em !important;
+        }
+        .btn {
+            font-size: 1.2em !important;
+        }
+        .highlight {
+            background: #fff59d;
+            color: #d84315;
+            font-weight: bold;
+            border-radius: 4px;
+            padding: 0 2px;
+        }
+        .question-diagram {
+            display: block;
+            margin: 0 auto 10px auto;
+            text-align: center;
+        }
+        .word-problem-bg {
+            background: #e1f5fe;
+            border-radius: 10px;
+            padding: 10px 0;
+        }
+    </style>
+</head>
+<body aria-label="Mental Maths Quiz" tabindex="0">
+    <div class="container" aria-label="Quiz Container" tabindex="0">
+        <!-- Introduction Page -->
+        <div id="intro-section" aria-label="Introduction Section" tabindex="0">
+            <h1>Welcome to Mental Maths Challenge!</h1>
+            <p style="text-align: center; margin-bottom: 20px;">
+                You will answer 15 questions. Each question will be read aloud twice by Daniel.
+                For the first 10 questions, you have 5 seconds to answer each.
+                For the last 5, you have 10 seconds. Listen carefully!
+            </p>
+            
+            <div id="loading-message" aria-live="polite" style="text-align: center; padding: 10px; background-color: #f5f5f5; border-radius: 5px; margin-bottom: 20px;">
+                Loading voice... Please wait.
+            </div>
+            
+            <h2 style="text-align: center;">Choose your avatar:</h2>
+            <div class="avatar-selection">
+                <div class="avatar-option" data-avatar="ronaldo">
+                    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%234CAF50'/><text x='50' y='65' font-size='20' text-anchor='middle' fill='white'>CR7</text></svg>" alt="Ronaldo">
+                    <p>Ronaldo</p>
+                </div>
+                <div class="avatar-option" data-avatar="taylor">
+                    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23E91E63'/><text x='50' y='65' font-size='20' text-anchor='middle' fill='white'>TS</text></svg>" alt="Taylor Swift">
+                    <p>Taylor Swift</p>
+                </div>
+                <div class="avatar-option" data-avatar="messi">
+                    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%232196F3'/><text x='50' y='65' font-size='20' text-anchor='middle' fill='white'>M10</text></svg>" alt="Messi">
+                    <p>Messi</p>
+                </div>
+                <div class="avatar-option" data-avatar="moana">
+                    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23FF9800'/><text x='50' y='65' font-size='20' text-anchor='middle' fill='white'>M</text></svg>" alt="Moana">
+                    <p>Moana</p>
+                </div>
+            </div>
+            <button id="start-btn" class="btn" disabled>Start Quiz</button>
+        </div>
+
+        <!-- Quiz Section -->
+        <div id="quiz-section" class="quiz-section" aria-label="Quiz Section" tabindex="0">
+            <img id="current-avatar" class="current-avatar" src="" alt="Current Avatar">
+            <div class="progress-bar">
+                <div id="progress-fill" class="progress-fill"></div>
+            </div>
+            <p id="progress-text" style="text-align: center;">Question 1 of 15</p>
+            <div class="timer" id="timer">Time remaining: 5s</div>
+            <div class="question-container">
+                <h2 id="question-text">Question goes here</h2>
+                <input type="text" id="answer-input" disabled>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results-section" class="results-section" aria-label="Results Section" tabindex="0">
+            <h1 id="final-score">Your Score: 0/15</h1>
+            <div id="answer-review" class="answer-review"></div>
+            <button id="restart-btn" class="btn">Restart Quiz</button>
+            <button id="print-btn" class="btn">Print Results</button>
+            <button id="new-avatar-btn" class="btn">Choose New Avatar</button>
+        </div>
+    </div>
+
+    <script>
+        // Large pool of Year 4 GL-style mental maths questions with curriculum coverage and types
+        const questionPool = [
+            // Place Value
+            { question: "What is the value of the digit 7 in 374?", answer: "70", type: "place-value", explanation: "The 7 is in the tens place, so it is worth 70." },
+            { question: "What is the value of the digit 3 in 3,245?", answer: "3000", type: "place-value", explanation: "The 3 is in the thousands place, so it is worth 3000." },
+            { question: "What is the value of the digit 5 in 452?", answer: "50", type: "place-value" },
+
+            // Rounding
+            { question: "Round 67 to the nearest ten.", answer: "70", type: "rounding", explanation: "67 is closer to 70 than 60." },
+            { question: "Round 134 to the nearest hundred.", answer: "100", type: "rounding" },
+            { question: "Round 289 to the nearest ten.", answer: "290", type: "rounding" },
+
+            // Number Patterns
+            { question: "What is the next number in the sequence: 5, 10, 15, 20, ?", answer: "25", type: "number-pattern" },
+            { question: "What is the next number in the sequence: 100, 90, 80, 70, ?", answer: "60", type: "number-pattern" },
+            { question: "What is the next number in the sequence: 2, 4, 8, 16, ?", answer: "32", type: "number-pattern" },
+
+            // Addition
+            { question: "What is 17 + 8?", answer: "25", type: "addition" },
+            { question: "What is 24 + 19?", answer: "43", type: "addition" },
+            { question: "What is 36 + 27?", answer: "63", type: "addition" },
+
+            // Subtraction
+            { question: "What is 35 - 19?", answer: "16", type: "subtraction" },
+            { question: "What is 62 - 28?", answer: "34", type: "subtraction" },
+            { question: "What is 50 - 17?", answer: "33", type: "subtraction" },
+
+            // Multiplication
+            { question: "What is 6 × 7?", answer: "42", type: "multiplication" },
+            { question: "What is 8 × 9?", answer: "72", type: "multiplication" },
+            { question: "What is 12 × 5?", answer: "60", type: "multiplication" },
+
+            // Division
+            { question: "What is 56 ÷ 8?", answer: "7", type: "division" },
+            { question: "What is 81 ÷ 9?", answer: "9", type: "division" },
+            { question: "What is 72 ÷ 6?", answer: "12", type: "division" },
+
+            // Fractions
+            { question: "What is half of 36?", answer: "18", type: "fractions" },
+            { question: "What is a quarter of 20?", answer: "5", type: "fractions" },
+            { question: "What is three-quarters of 16?", answer: "12", type: "fractions" },
+
+            // Decimals
+            { question: "What is 0.5 as a fraction?", answer: "1/2", type: "decimals" },
+            { question: "What is 0.25 as a fraction?", answer: "1/4", type: "decimals" },
+            { question: "What is 1.5 as a mixed number?", answer: "1 1/2", type: "decimals" },
+
+            // Time
+            { question: "How many minutes in 2 hours?", answer: "120", type: "time" },
+            { question: "What is the time 45 minutes before 11 o'clock?", answer: "10:15", type: "time" },
+            { question: "How many minutes in half an hour?", answer: "30", type: "time" },
+
+            // Money
+            { question: "What is 50p plus 75p?", answer: "£1.25", type: "money" },
+            { question: "If you have £2 and spend 65p, how much is left?", answer: "£1.35", type: "money" },
+            { question: "How many 20p coins make £1?", answer: "5", type: "money" },
+
+            // Measures
+            { question: "How many grams in 2 kilograms?", answer: "2000", type: "measures" },
+            { question: "How many centimetres in 3 metres?", answer: "300", type: "measures" },
+            { question: "How many millilitres in half a litre?", answer: "500", type: "measures" },
+
+            // Perimeter
+            { question: "What is the perimeter of a square with sides of 6cm?", answer: "24", type: "perimeter" },
+            { question: "What is the perimeter of a rectangle with sides 5cm and 3cm?", answer: "16", type: "perimeter" },
+            { question: "What is the perimeter of an equilateral triangle with sides of 7cm?", answer: "21", type: "perimeter" },
+
+            // Area
+            { question: "What is the area of a rectangle with sides 4cm and 3cm?", answer: "12", type: "area" },
+            { question: "What is the area of a square with sides of 5cm?", answer: "25", type: "area" },
+            { question: "What is the area of a rectangle with sides 10cm and 2cm?", answer: "20", type: "area" },
+
+            // Reasoning/Comparisons
+            { question: "Which is greater: 48 or 84?", answer: "84", type: "reasoning" },
+            { question: "What is the smallest number: 17, 71, 27?", answer: "17", type: "reasoning" },
+            { question: "Which is more: half of 30 or a third of 45?", answer: "They are the same", type: "reasoning" },
+
+            // Vocabulary
+            { question: "How many items are in a dozen?", answer: "12", type: "vocabulary", hint: "A dozen is a common grouping." },
+            { question: "How many years are in a century?", answer: "100", type: "vocabulary" },
+            { question: "How many items are in a score?", answer: "20", type: "vocabulary" },
+
+            // Negative numbers
+            { question: "What is -3 + 7?", answer: "4", type: "negative-numbers" },
+            { question: "What is 5 - 9?", answer: "-4", type: "negative-numbers" },
+            { question: "What is -6 + 2?", answer: "-4", type: "negative-numbers" },
+
+            // Geometry
+            { question: "How many sides does a pentagon have?", answer: "5", type: "geometry" },
+            { question: "How many sides does a hexagon have?", answer: "6", type: "geometry" },
+            { question: "How many right angles in a rectangle?", answer: "4", type: "geometry" },
+
+            // Word Problems
+            { question: "If you have 12 apples and eat 3, how many are left?", answer: "9", type: "word-problem" },
+            { question: "Sam has 5 packs of 6 stickers. How many stickers does he have?", answer: "30", type: "word-problem" },
+            { question: "A cake is cut into 8 slices. If you eat 3, how many are left?", answer: "5", type: "word-problem" }
+        ];
+
+        // Add this block to initialize all DOM element references
+        const elements = {
+            introSection: document.getElementById('intro-section'),
+            quizSection: document.getElementById('quiz-section'),
+            resultsSection: document.getElementById('results-section'),
+            startBtn: document.getElementById('start-btn'),
+            restartBtn: document.getElementById('restart-btn'),
+            printBtn: document.getElementById('print-btn'),
+            newAvatarBtn: document.getElementById('new-avatar-btn'),
+            avatarOptions: Array.from(document.querySelectorAll('.avatar-option')),
+            currentAvatar: document.getElementById('current-avatar'),
+            progressBar: document.querySelector('.progress-bar'),
+            progressFill: document.getElementById('progress-fill'),
+            progressText: document.getElementById('progress-text'),
+            timer: document.getElementById('timer'),
+            questionText: document.getElementById('question-text'),
+            answerInput: document.getElementById('answer-input'),
+            finalScore: document.getElementById('final-score'),
+            answerReview: document.getElementById('answer-review')
+        };
+
+        // Helper to get and set used questions in localStorage
+        function getUsedQuestions() {
+            try {
+                return JSON.parse(localStorage.getItem('usedQuestions') || '[]');
+            } catch (e) {
+                return [];
+            }
+        }
+        function setUsedQuestions(used) {
+            localStorage.setItem('usedQuestions', JSON.stringify(used));
+        }
+
+        // Generate a balanced mix of questions for the quiz, excluding used ones
+        function generateQuestions() {
+            const usedQuestions = getUsedQuestions();
+            // Define the desired mix (type: number of questions)
+            const typeMix = {
+                'place-value': 1,
+                'rounding': 1,
+                'number-pattern': 1,
+                'addition': 1,
+                'subtraction': 1,
+                'multiplication': 1,
+                'division': 1,
+                'fractions': 1,
+                'decimals': 1,
+                'time': 1,
+                'money': 1,
+                'measures': 1,
+                'perimeter': 1,
+                'area': 1,
+                'reasoning': 1,
+                'vocabulary': 1,
+                'negative-numbers': 1,
+                'geometry': 1,
+                'word-problem': 1
+            };
+            // Shuffle helper
+            function shuffle(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+            // Exclude used questions
+            let availablePool = questionPool.filter(q => !usedQuestions.includes(q.question));
+            // If not enough questions left, reset the used list
+            if (availablePool.length < 15) {
+                setUsedQuestions([]);
+                availablePool = [...questionPool];
+            }
+            let selected = [];
+            const usedSet = new Set();
+            // Try to add 1 of each type (or as many as available)
+            Object.keys(typeMix).forEach(type => {
+                const pool = shuffle(availablePool.filter(q => q.type === type && !usedSet.has(q.question)));
+                if (pool.length > 0) {
+                    selected.push(pool[0]);
+                    usedSet.add(pool[0].question);
+                }
+            });
+            // If less than 15, fill with random unique questions
+            if (selected.length < 15) {
+                const remaining = shuffle(availablePool.filter(q => !usedSet.has(q.question)));
+                for (let i = 0; i < remaining.length && selected.length < 15; i++) {
+                    selected.push(remaining[i]);
+                    usedSet.add(remaining[i].question);
+                }
+            }
+            // If more than 15, trim
+            if (selected.length > 15) {
+                selected = shuffle(selected).slice(0, 15);
+            }
+            // Update localStorage with newly used questions
+            setUsedQuestions([...usedQuestions, ...selected.map(q => q.question)]);
+            return selected;
+        }
+
+        // Game State
+        let state = {
+            selectedAvatar: null,
+            questions: [],
+            currentQuestion: 0,
+            score: 0,
+            answers: [],
+            timer: null,
+            timeLeft: 0,
+            synth: window.speechSynthesis,
+            voice: null,
+            isReading: false,
+            availableVoices: []
+        };
+
+        // Initialize voices with retry mechanism and select the clearest, most child-friendly English voice
+        function initializeVoices() {
+            const voices = state.synth.getVoices();
+            if (voices.length === 0) {
+                setTimeout(initializeVoices, 100);
+                return;
+            }
+
+            // Find the best available voice in preferred order
+            // Prioritize Google UK English Female which is clear and works well
+            const preferredVoices = [
+                { name: "Google UK English Female", lang: "en-GB" },
+                { name: "Google UK English Male", lang: "en-GB" },
+                { name: "Microsoft Hazel - English (United Kingdom)", lang: "en-GB" },
+                { name: "Microsoft Susan - English (United Kingdom)", lang: "en-GB" },
+                { name: "Microsoft Zira - English (United States)", lang: "en-US" },
+                { name: "Google US English", lang: "en-US" }
+            ];
+            
+            // Try to find preferred voices first
+            for (const pref of preferredVoices) {
+                const foundVoice = voices.find(v => v.name === pref.name || 
+                                                    (v.name.includes(pref.name) && v.lang === pref.lang));
+                if (foundVoice) {
+                    state.voice = foundVoice;
+                    console.log('Found preferred voice:', state.voice.name, state.voice.lang);
+                    document.getElementById('loading-message').style.display = 'none';
+                    return;
+                }
+            }
+            
+            // Fallback to any English voice
+            state.voice = voices.find(v => v.lang && v.lang.startsWith('en')) || voices[0];
+            if (state.voice) {
+                console.log('Selected fallback voice:', state.voice.name, state.voice.lang);
+                document.getElementById('loading-message').style.display = 'none';
+            } else {
+                console.warn('No suitable voice found, using browser default');
+                document.getElementById('loading-message').textContent = 'Voice not available. Quiz may not speak correctly.';
+            }
+        }
+
+        // Initialize voices when they're loaded
+        if (state.synth.onvoiceschanged !== undefined) {
+            state.synth.onvoiceschanged = initializeVoices;
+        }
+        initializeVoices(); // Try initial load
+
+        // Helper to check if a question is already in the list
+        function isDuplicate(questions, newQuestion) {
+            return questions.some(q => q.question === newQuestion.question);
+        }
+
+        // Helper to convert numbers and symbols in a question to words for TTS
+        function questionToWords(text) {
+            // Replace math symbols and only expand currency/units when used as such
+            let out = text
+                .replace(/\+/g, ' plus ')
+                // Only replace hyphens between numbers with 'minus'
+                .replace(/(\d+)\s*-\s*(\d+)/g, '$1 minus $2')
+                .replace(/×|x/g, ' times ')
+                .replace(/÷/g, ' divided by ')
+                .replace(/=/g, ' equals ')
+                // Replace £ followed by a number (e.g., £1, £2.50)
+                .replace(/£(\d+(?:\.\d+)?)/g, '$1 pound')
+                // Replace standalone £ (rare)
+                .replace(/£/g, 'pound ')
+                // Replace pence (e.g., 50p)
+                .replace(/\b(\d+)p\b/g, '$1 pence')
+                // Replace cm, kg, g, ml, l as units only when after a number
+                .replace(/(\d+)cm\b/g, '$1 centimetres')
+                .replace(/(\d+)kg\b/g, '$1 kilograms')
+                .replace(/(\d+)g\b/g, '$1 grams')
+                .replace(/(\d+)ml\b/g, '$1 millilitres')
+                .replace(/(\d+)l\b/g, '$1 litres')
+                .replace(/°/g, ' degrees ')
+                // Special pronunciations for geometric shapes
+                .replace(/\bhexagon\b/gi, 'hex aa gon')
+                .replace(/\bpentagon\b/gi, 'pent aa gon')
+                .replace(/\boctagon\b/gi, 'oct aa gon')
+                .replace(/\btriangle\b/gi, 'try angle');
+            return out.replace(/\s+/g, ' ').trim();
+        }
+
+        // --- SpeechQueue class for managing TTS queue ---
+        class SpeechQueue {
+            constructor() {
+                this.queue = [];
+                this.isSpeaking = false;
+            }
+            add(options, onEnd) {
+                this.queue.push({ options, onEnd });
+                this.next();
+            }
+            next() {
+                if (this.isSpeaking || this.queue.length === 0) return;
+                const { options, onEnd } = this.queue.shift();
+                const utter = new SpeechSynthesisUtterance(options.text);
+                utter.rate = options.rate || 1;
+                utter.pitch = options.pitch || 1;
+                utter.volume = options.volume || 1;
+                if (state.voice) utter.voice = state.voice;
+                this.isSpeaking = true;
+                utter.onend = () => {
+                    this.isSpeaking = false;
+                    if (onEnd) onEnd();
+                    this.next();
+                };
+                utter.onerror = () => {
+                    this.isSpeaking = false;
+                    if (onEnd) onEnd();
+                    this.next();
+                };
+                state.synth.speak(utter);
+            }
+            clear() {
+                state.synth.cancel();
+                this.queue = [];
+                this.isSpeaking = false;
+            }
+        }
+        // Instantiate the speechQueue
+        const speechQueue = new SpeechQueue();
+
+        // Speak the question
+        function speakQuestion(text) {
+            // Clear any existing speech and queue
+            speechQueue.clear();
+            state.isReading = true;
+
+            // Use 'following' instead of 'next' for sequence questions in TTS
+            let spokenText = text;
+            const currentQ = state.questions[state.currentQuestion];
+            if (currentQ && currentQ.type === 'number-pattern') {
+                spokenText = text.replace(/\bnext\b/gi, 'following');
+            }
+            spokenText = questionToWords(spokenText);
+
+            // Log the question being spoken
+            console.log('Speaking question:', spokenText);
+
+            // Disable timer display and input while question is read
+            elements.timer.style.visibility = 'hidden';
+            elements.timer.textContent = 'Listening to question...';
+            elements.answerInput.disabled = true;
+            elements.answerInput.style.backgroundColor = 'white';
+
+            // Set speech rate: 0.9 for most, 0.85 for word problems
+            let speechRate = 0.9;
+            if (currentQ && currentQ.type === 'word-problem') {
+                speechRate = 0.85;
+            }
+
+            // First reading with delay to ensure it starts properly
+            setTimeout(() => {
+                speechQueue.add({text: spokenText, rate: speechRate}, () => {
+                    console.log('First reading complete');
+                    // Keep input disabled until second reading completes
+                    // Just add delay between readings
+                    setTimeout(() => {
+                        // Second reading
+                        speechQueue.add({text: spokenText, rate: speechRate}, () => {
+                            console.log('Second reading complete');
+                            // Enable input and focus only after both readings are complete
+                            state.isReading = false;
+                            elements.answerInput.disabled = false;
+                            elements.answerInput.focus();
+                            // Start timer after second reading
+                            elements.timer.style.visibility = 'visible';
+                            // Start timer based on question number
+                            const seconds = state.currentQuestion < 10 ? 5 : 10;
+                            startTimer(seconds);
+                        });
+                    }, 1000);
+                });
+            }, 500);
+        }
+
+        // Start timer
+        function startTimer(seconds) {
+            state.timeLeft = seconds;
+            elements.timer.textContent = `Time remaining: ${state.timeLeft}s`;
+            
+            clearInterval(state.timer);
+            state.timer = setInterval(() => {
+                if (state.isReading) {
+                    return; // Don't countdown while reading
+                }
+                
+                state.timeLeft--;
+                elements.timer.textContent = `Time remaining: ${state.timeLeft}s`;
+                
+                if (state.timeLeft <= 0) {
+                    clearInterval(state.timer);
+                    elements.timer.textContent = "Time's up!";
+                    // Wait 1 second before moving to next question
+                    setTimeout(submitAnswer, 1000);
+                }
+            }, 1000);
+        }
+
+        // Positive feedback messages
+        const positiveFeedback = [
+            "Great job!",
+            "Well done!",
+            "Keep going!",
+            "You're doing great!",
+            "Nice work!",
+            "Super!",
+            "Excellent!",
+            "Keep it up!",
+            "Fantastic!",
+            "Brilliant!"
+        ];
+
+        // Show question
+        function showQuestion() {
+            if (state.currentQuestion >= state.questions.length) {
+                showResults();
+                return;
+            }
+
+            // Show transition page after 10 questions
+            if (state.currentQuestion === 10) {
+                // Hide quiz section and show a new instruction section
+                elements.quizSection.style.display = 'none';
+                let transitionSection = document.getElementById('transition-section');
+                if (!transitionSection) {
+                    transitionSection = document.createElement('div');
+                    transitionSection.id = 'transition-section';
+                    transitionSection.className = 'container fade-in';
+                    transitionSection.innerHTML = `
+                        <h2 style="text-align:center;">Great job!</h2>
+                        <p style="text-align:center;font-size:1.2em;">The next 5 questions are a bit harder.<br>You will have <b>10 seconds</b> for each.<br>Listen carefully and do your best!</p>
+                        <button id="continue-btn" class="btn" style="display:block;margin:20px auto;">Continue</button>
+                    `;
+                    document.body.appendChild(transitionSection);
+                } else {
+                    transitionSection.style.display = 'block';
+                }
+                // Add event listener for continue
+                document.getElementById('continue-btn').onclick = () => {
+                    transitionSection.style.display = 'none';
+                    elements.quizSection.style.display = 'block';
+                    displayQuestion();
+                };
+                return;
+            }
+
+            displayQuestion();
+        }
+
+        function displayQuestion() {
+            const question = state.questions[state.currentQuestion];
+            
+            // Log the current question being displayed
+            console.log('Displaying question:', state.currentQuestion + 1, question);
+
+            if (!question || !question.question) {
+                console.error('Invalid question object:', question);
+                return;
+            }
+
+            // For number-pattern questions, display 'following' instead of 'next' for consistency with TTS
+            let displayText = question.question;
+            if (question.type === 'number-pattern') {
+                displayText = question.question.replace(/\bnext\b/gi, 'following');
+            }
+
+            // Highlight key words
+            const highlighted = highlightQuestionText(displayText, question.type);
+            // Add SVG diagram if needed
+            const diagram = getQuestionDiagram(question.type, question.question);
+            // Special background for word problems
+            if (question.type === 'word-problem') {
+                elements.questionText.parentElement.classList.add('word-problem-bg');
+            } else {
+                elements.questionText.parentElement.classList.remove('word-problem-bg');
+            }
+            elements.questionText.innerHTML = diagram + highlighted;
+            elements.answerInput.value = '';
+            elements.answerInput.disabled = true;
+            
+            // Update progress
+            elements.progressText.textContent = `Question ${state.currentQuestion + 1} of 15`;
+            elements.progressFill.style.width = `${((state.currentQuestion + 1) / 15) * 100}%`;
+            
+            // Remove previous feedback
+            const oldFeedback = document.getElementById('feedback-message');
+            if (oldFeedback) oldFeedback.remove();
+            
+            // Speak question (timer will start after reading)
+            speakQuestion(state.questions[state.currentQuestion].question);
+
+            // Auto-focus after enabling
+            setTimeout(() => {
+                elements.answerInput.focus();
+            }, 100);
+        }
+
+        // Submit answer
+        function submitAnswer() {
+            // Don't submit if still reading the question
+            if (state.isReading) {
+                return;
+            }
+
+            // Don't submit until timer is finished
+            if (state.timeLeft > 0) {
+                return;
+            }
+
+            clearInterval(state.timer);
+            // Clear speech queue
+            speechQueue.clear();
+            
+            const userAnswer = elements.answerInput.value.trim();
+            const correctAnswer = state.questions[state.currentQuestion].answer;
+            
+            const isCorrect = userAnswer === correctAnswer;
+            state.answers.push({
+                question: state.questions[state.currentQuestion].question,
+                userAnswer: userAnswer,
+                correctAnswer: correctAnswer,
+                isCorrect: isCorrect,
+                explanation: state.questions[state.currentQuestion].explanation || null
+            });
+
+            if (isCorrect) {
+                state.score++;
+            }
+
+            // Show positive feedback
+            const feedbackEl = document.createElement('div');
+            feedbackEl.id = 'feedback-message';
+            feedbackEl.style.fontSize = '1.3em';
+            feedbackEl.style.textAlign = 'center';
+            feedbackEl.style.margin = '10px 0 20px 0';
+            feedbackEl.style.color = isCorrect ? '#388e3c' : '#d32f2f';
+            feedbackEl.textContent = isCorrect
+                ? positiveFeedback[Math.floor(Math.random() * positiveFeedback.length)]
+                : "Keep trying!";
+            // Remove any old feedback
+            const oldFeedback = document.getElementById('feedback-message');
+            if (oldFeedback) oldFeedback.remove();
+            elements.quizSection.insertBefore(feedbackEl, elements.progressBar || elements.timer);
+
+            state.currentQuestion++;
+            // Wait a moment before showing the next question
+            setTimeout(() => {
+                feedbackEl.remove();
+            showQuestion();
+            }, 1200);
+        }
+
+        // Show results
+        function showResults() {
+            elements.quizSection.style.display = 'none';
+            elements.resultsSection.style.display = 'block';
+            elements.finalScore.textContent = `You scored ${state.score} out of 15!`;
+            
+            // Show badge/star for high score
+            let badgeHtml = '';
+            if (state.score >= 13) {
+                badgeHtml = '<div style="text-align:center;margin:10px 0;"><span style="font-size:2.5em;">⭐</span><br><span style="font-size:1.2em;">Star Award!</span></div>';
+            }
+
+            // Show answer review with explanations
+            elements.answerReview.innerHTML =
+                badgeHtml +
+                state.answers.map((answer, index) => `
+                <div class="answer-item">
+                    <p><strong>Question ${index + 1}:</strong> ${answer.question}</p>
+                    <p>Your answer: <span class="${answer.isCorrect ? 'correct' : 'incorrect'}">${answer.userAnswer || 'No answer'}</span></p>
+                    <p>Correct answer: ${answer.correctAnswer}</p>
+                    ${!answer.isCorrect ? `<p style='color:#1976d2;'>${answer.explanation ? 'Explanation: ' + answer.explanation : 'Review this topic and try again!'}</p>` : ''}
+                </div>
+            `).join('');
+        }
+
+        // Event Listeners
+        elements.avatarOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                elements.avatarOptions.forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                state.selectedAvatar = option.dataset.avatar;
+                elements.startBtn.disabled = false;
+                elements.currentAvatar.src = option.querySelector('img').src;
+            });
+        });
+
+        elements.startBtn.addEventListener('click', () => {
+            // Check if voice is initialized before starting
+            if (!state.voice) {
+                alert("Speech synthesis voices aren't ready yet. Please wait a moment and try again.");
+                return;
+            }
+            
+            elements.introSection.style.display = 'none';
+            elements.quizSection.style.display = 'block';
+            state.questions = generateQuestions();
+            showQuestion();
+        });
+
+        elements.answerInput.addEventListener('input', (e) => {
+            validateAnswer(e.target.value);
+        });
+
+        elements.answerInput.addEventListener('keypress', (e) => {
+            // Prevent Enter key from submitting
+            if (e.key === 'Enter') {
+                e.preventDefault();
+            }
+        });
+
+        elements.restartBtn.addEventListener('click', () => {
+            state = {
+                ...state,
+                questions: [],
+                currentQuestion: 0,
+                score: 0,
+                answers: [],
+                timer: null,
+                timeLeft: 0
+            };
+            elements.resultsSection.style.display = 'none';
+            elements.quizSection.style.display = 'block';
+            state.questions = generateQuestions();
+            showQuestion();
+        });
+
+        elements.newAvatarBtn.addEventListener('click', () => {
+            elements.resultsSection.style.display = 'none';
+            elements.introSection.style.display = 'block';
+            elements.startBtn.disabled = true;
+            elements.avatarOptions.forEach(opt => opt.classList.remove('selected'));
+        });
+
+        elements.printBtn.addEventListener('click', () => {
+            window.print();
+        });
+
+        // Add real-time answer validation
+        function validateAnswer(input) {
+            const correctAnswer = state.questions[state.currentQuestion].answer;
+            const userAnswer = input.trim();
+            
+            // Add visual feedback
+            if (userAnswer === '') {
+                elements.answerInput.style.backgroundColor = 'white';
+            } else if (userAnswer === correctAnswer) {
+                elements.answerInput.style.backgroundColor = '#e8f5e9'; // Light green
+            } else {
+                elements.answerInput.style.backgroundColor = '#ffebee'; // Light red
+            }
+        }
+
+        // Add number pad HTML after the answer input
+        const numberPadHtml = `
+            <div id="number-pad" style="display: flex; flex-wrap: wrap; max-width: 240px; margin: 10px auto 0 auto; gap: 8px; justify-content: center;">
+                ${[1,2,3,4,5,6,7,8,9,0].map(n => `<button type="button" class="btn number-btn" data-num="${n}" aria-label="${n}">${n}</button>`).join('')}
+                <button type="button" class="btn number-btn" data-num="clear" aria-label="Clear">C</button>
+                <button type="button" class="btn number-btn" data-num="back" aria-label="Backspace">⌫</button>
+            </div>
+        `;
+        // Insert number pad after answer input on page load
+        elements.answerInput.insertAdjacentHTML('afterend', numberPadHtml);
+        const numberPad = document.getElementById('number-pad');
+        // Number pad event handler
+        numberPad.addEventListener('click', function(e) {
+            if (e.target.classList.contains('number-btn')) {
+                const val = e.target.getAttribute('data-num');
+                if (val === 'clear') {
+                    elements.answerInput.value = '';
+                } else if (val === 'back') {
+                    elements.answerInput.value = elements.answerInput.value.slice(0, -1);
+                } else {
+                    elements.answerInput.value += val;
+                }
+                elements.answerInput.focus();
+                validateAnswer(elements.answerInput.value);
+            }
+        });
+        // Disable copy-paste in answer input
+        elements.answerInput.addEventListener('paste', e => e.preventDefault());
+        elements.answerInput.addEventListener('copy', e => e.preventDefault());
+
+        // Helper to highlight key words in questions
+        function highlightQuestionText(text, type) {
+            // List of key words to highlight
+            const keywords = [
+                'add', 'plus', 'sum', 'total', 'increase',
+                'subtract', 'minus', 'take away', 'difference', 'decrease',
+                'times', 'multiply', 'multiplied', 'product',
+                'divide', 'divided', 'shared', 'quotient',
+                'fraction', 'half', 'quarter', 'third', 'fifth',
+                'perimeter', 'area', 'shape', 'sides', 'right angle', 'rectangle', 'square', 'triangle', 'hexagon', 'pentagon', 'octagon',
+                'value', 'round', 'sequence', 'pattern', 'number', 'digit',
+                'hour', 'minute', 'second', 'day', 'week', 'month', 'year',
+                'money', 'pence', 'pound', 'coin', 'change',
+                'negative', 'less', 'more', 'greater', 'smaller', 'largest', 'smallest', 'equals', 'equal', 'difference', 'between'
+            ];
+            let out = text;
+            keywords.forEach(word => {
+                // Highlight whole words only, case-insensitive
+                out = out.replace(new RegExp(`\\b(${word})\\b`, 'gi'), '<span class="highlight">$1</span>');
+            });
+            return out;
+        }
+        // Helper to return SVG for perimeter/area/shape questions
+        function getQuestionDiagram(type, question) {
+            if (type === 'perimeter' || type === 'area' || type === 'geometry') {
+                if (/square/i.test(question)) {
+                    return `<svg width="60" height="60" class="question-diagram" aria-label="Square"><rect x="10" y="10" width="40" height="40" fill="#90caf9" stroke="#1976d2" stroke-width="3"/></svg>`;
+                } else if (/rectangle/i.test(question)) {
+                    return `<svg width="80" height="50" class="question-diagram" aria-label="Rectangle"><rect x="10" y="10" width="60" height="30" fill="#a5d6a7" stroke="#388e3c" stroke-width="3"/></svg>`;
+                } else if (/triangle/i.test(question)) {
+                    return `<svg width="60" height="60" class="question-diagram" aria-label="Triangle"><polygon points="10,50 50,50 30,10" fill="#ffe082" stroke="#fbc02d" stroke-width="3"/></svg>`;
+                } else if (/hexagon/i.test(question)) {
+                    return `<svg width="60" height="60" class="question-diagram" aria-label="Hexagon"><polygon points="30,10 50,20 50,40 30,50 10,40 10,20" fill="#ce93d8" stroke="#8e24aa" stroke-width="3"/></svg>`;
+                } else if (/pentagon/i.test(question)) {
+                    return `<svg width="60" height="60" class="question-diagram" aria-label="Pentagon"><polygon points="30,10 50,25 42,50 18,50 10,25" fill="#ffab91" stroke="#d84315" stroke-width="3"/></svg>`;
+                } else if (/octagon/i.test(question)) {
+                    return `<svg width="60" height="60" class="question-diagram" aria-label="Octagon"><polygon points="20,10 40,10 50,20 50,40 40,50 20,50 10,40 10,20" fill="#b0bec5" stroke="#37474f" stroke-width="3"/></svg>`;
+                }
+            }
+            return '';
+        }
+    </script>
+</body>
+</html> 
