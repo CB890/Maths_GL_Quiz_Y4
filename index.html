@@ -512,6 +512,7 @@
             voice: null,
             isReading: false,
             isSubmitting: false,
+            speechStep: 0, // Track which reading step we're on
             availableVoices: []
         };
 
@@ -585,30 +586,42 @@
             }
         }
 
-        // Initialize voices when they're loaded with better retry logic
+        // Initialize voices with minimal delay - don't block quiz start
         let voiceInitAttempts = 0;
-        const maxVoiceInitAttempts = 50; // Try for up to 5 seconds
+        const maxVoiceInitAttempts = 10; // Reduced attempts, don't block quiz
 
         function tryInitializeVoices() {
             voiceInitAttempts++;
             initializeVoices();
             
-            // If still no voices after many attempts, proceed anyway
-            if (voiceInitAttempts >= maxVoiceInitAttempts && state.synth.getVoices().length === 0) {
-                console.warn('Could not load any voices, proceeding without optimal speech synthesis');
-                updateLoadingMessage('Quiz ready! (Speech may not be optimal)', 'warning');
-                state.voice = null; // Will use browser default
+            // After just a few attempts, proceed anyway
+            if (voiceInitAttempts >= maxVoiceInitAttempts) {
+                console.log('Voice initialization complete, quiz ready');
+                updateLoadingMessage('Quiz ready!', 'success');
+                if (!state.voice) {
+                    state.voice = null; // Will use browser default
+                }
             }
         }
 
+        // Quick voice initialization - don't block the quiz
         if (state.synth.onvoiceschanged !== undefined) {
             state.synth.onvoiceschanged = tryInitializeVoices;
         }
-        tryInitializeVoices(); // Try initial load
-
-        // Retry voice loading after a delay (common fix for GitHub Pages)
-        setTimeout(tryInitializeVoices, 1000);
-        setTimeout(tryInitializeVoices, 3000);
+        
+        // Try immediate load
+        tryInitializeVoices();
+        
+        // Quick retry - then give up and let quiz start
+        setTimeout(() => {
+            if (voiceInitAttempts < maxVoiceInitAttempts) {
+                tryInitializeVoices();
+            }
+            // Force quiz to be ready after 2 seconds max
+            setTimeout(() => {
+                updateLoadingMessage('Quiz ready!', 'success');
+            }, 1000);
+        }, 1000);
 
         // Helper to check if a question is already in the list
         function isDuplicate(questions, newQuestion) {
@@ -699,17 +712,26 @@
                     state.synth.cancel();
                     this.isActive = false;
                     this.currentUtterance = null;
+                    // Reset speech state when cancelling
+                    state.speechStep = 0;
                 }
             }
         };
 
-        // Speak the question twice, then start timer
+        // Speak the question twice, then start timer - simplified and more reliable
         function speakQuestion(text) {
             console.log('=== Starting question speech sequence ===');
+            
+            // Prevent multiple calls
+            if (state.isReading) {
+                console.log('Already reading question, ignoring duplicate call');
+                return;
+            }
             
             // Cancel any existing speech
             speechManager.cancel();
             state.isReading = true;
+            state.speechStep = 1; // Track which reading we're on
 
             // Use 'following' instead of 'next' for sequence questions in TTS
             let spokenText = text;
@@ -734,48 +756,88 @@
                 speechRate = 0.85;
             }
 
-            // Check if speech synthesis is working
+            // Check if speech synthesis is available, otherwise use silent mode
             if (!('speechSynthesis' in window)) {
                 console.warn('Speech synthesis not available, using silent mode');
                 startSilentMode();
                 return;
             }
-            
-            // Test speech synthesis with a short test
-            if (!state.voice && state.synth.getVoices().length === 0) {
-                console.warn('No voices available yet, trying silent mode');
-                startSilentMode();
-                return;
-            }
 
-            // Start first reading
-            console.log('Starting first reading...');
-            speechManager.speak(spokenText, speechRate, () => {
-                console.log('First reading completed, starting second reading...');
+            // Always proceed with speech - use browser defaults if needed
+            doFirstReading();
+            
+            function doFirstReading() {
+                console.log('Starting first reading...');
+                state.speechStep = 1;
+                elements.timer.textContent = 'First reading...';
+                
+                // Add timeout fallback in case speech fails
+                const firstReadingTimeout = setTimeout(() => {
+                    console.warn('First reading timeout, proceeding to second reading');
+                    if (state.speechStep === 1) {
+                        doSecondReading();
+                    }
+                }, 8000);
+                
+                speechManager.speak(spokenText, speechRate, () => {
+                    console.log('First reading completed');
+                    clearTimeout(firstReadingTimeout);
+                    if (state.speechStep === 1) { // Only proceed if we're still on step 1
+                        doSecondReading();
+                    }
+                });
+            }
+            
+            function doSecondReading() {
+                console.log('Starting second reading...');
+                state.speechStep = 2;
                 elements.timer.textContent = 'Second reading...';
                 
-                // Wait a moment, then start second reading
+                // Brief pause before second reading
                 setTimeout(() => {
+                    // Add timeout fallback for second reading
+                    const secondReadingTimeout = setTimeout(() => {
+                        console.warn('Second reading timeout, starting timer');
+                        if (state.speechStep === 2) {
+                            finishReadings();
+                        }
+                    }, 8000);
+                    
                     speechManager.speak(spokenText, speechRate, () => {
                         console.log('Second reading completed, starting timer...');
-                        
-                        // Both readings complete - enable input and start timer
-                        state.isReading = false;
-                        elements.answerInput.disabled = false;
-                        elements.answerInput.focus();
-                        elements.timer.style.visibility = 'visible';
-                        
-                        // Start timer based on question number
-                        const seconds = state.currentQuestion < 10 ? 5 : 10;
-                        startTimer(seconds);
+                        clearTimeout(secondReadingTimeout);
+                        if (state.speechStep === 2) { // Only proceed if we're still on step 2
+                            finishReadings();
+                        }
                     });
-                }, 800); // Short pause between readings
-            });
+                }, 500);
+            }
+            
+            function finishReadings() {
+                console.log('Both readings complete - enabling input and starting timer');
+                
+                // Both readings complete - enable input and start timer
+                state.isReading = false;
+                state.speechStep = 0;
+                elements.answerInput.disabled = false;
+                elements.answerInput.focus();
+                elements.timer.style.visibility = 'visible';
+                
+                // Start timer based on question number
+                const seconds = state.currentQuestion < 10 ? 5 : 10;
+                startTimer(seconds);
+            }
         }
 
         // Silent mode fallback when speech synthesis fails
         function startSilentMode() {
             console.log('Starting silent mode');
+            
+            // Reset speech state
+            state.isReading = false;
+            state.speechStep = 0;
+            speechManager.cancel();
+            
             elements.timer.textContent = 'Read the question above, then answer below';
             
             // Add visual indicator for silent mode
@@ -791,7 +853,7 @@
                 font-size: 0.9em;
                 border: 1px solid #ffcc02;
             `;
-            silentIndicator.textContent = '🔇 Silent Mode: Read questions carefully!';
+            silentIndicator.textContent = '🔇 Silent Mode: Read the question carefully!';
             
             // Remove any existing indicator
             const existing = document.getElementById('silent-mode-indicator');
@@ -800,16 +862,14 @@
             // Insert before question text
             elements.questionText.parentElement.insertBefore(silentIndicator, elements.questionText);
             
-            // Enable input after a short delay to let user read
-            setTimeout(() => {
-                state.isReading = false;
-                elements.answerInput.disabled = false;
-                elements.answerInput.focus();
-                elements.timer.style.visibility = 'visible';
-                // Give more time in silent mode
-                const seconds = state.currentQuestion < 10 ? 8 : 15;
-                startTimer(seconds);
-            }, 2000);
+            // Enable input immediately in silent mode
+            elements.answerInput.disabled = false;
+            elements.answerInput.focus();
+            elements.timer.style.visibility = 'visible';
+            
+            // Give more time in silent mode
+            const seconds = state.currentQuestion < 10 ? 8 : 12;
+            startTimer(seconds);
         }
 
         // Start timer
@@ -902,6 +962,7 @@
             
             // Reset submission flag for new question
             state.isSubmitting = false;
+            state.speechStep = 0; // Reset speech step
             
             // Log the current question being displayed
             console.log('Displaying question:', state.currentQuestion + 1, question);
@@ -935,17 +996,16 @@
             elements.progressText.textContent = `Question ${state.currentQuestion + 1} of 15`;
             elements.progressFill.style.width = `${((state.currentQuestion + 1) / 15) * 100}%`;
             
-            // Remove previous feedback
+            // Remove previous feedback and silent mode indicators
             const oldFeedback = document.getElementById('feedback-message');
             if (oldFeedback) oldFeedback.remove();
+            const oldSilentIndicator = document.getElementById('silent-mode-indicator');
+            if (oldSilentIndicator) oldSilentIndicator.remove();
             
-            // Speak question (timer will start after reading)
-            speakQuestion(state.questions[state.currentQuestion].question);
-
-            // Auto-focus after enabling
+            // Small delay to ensure display is ready, then speak question
             setTimeout(() => {
-                elements.answerInput.focus();
-            }, 100);
+                speakQuestion(state.questions[state.currentQuestion].question);
+            }, 200);
         }
 
         // Submit answer
