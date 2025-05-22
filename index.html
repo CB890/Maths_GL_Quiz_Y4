@@ -225,7 +225,7 @@
         <div id="intro-section" aria-label="Introduction Section" tabindex="0">
             <h1>Welcome to Mental Maths Challenge!</h1>
             <p style="text-align: center; margin-bottom: 20px;">
-                You will answer 15 questions. Each question will be read aloud twice by Daniel.
+                You will answer 15 questions. Each question will be read aloud twice (if audio is available).
                 For the first 10 questions, you have 5 seconds to answer each.
                 For the last 5, you have 10 seconds. Listen carefully!
             </p>
@@ -479,6 +479,26 @@
             return selected;
         }
 
+        // Add debugging and environment detection
+        function detectEnvironment() {
+            const isGitHubPages = window.location.hostname.includes('github.io');
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const protocol = window.location.protocol;
+            
+            console.log('Environment detection:');
+            console.log('- Hostname:', window.location.hostname);
+            console.log('- Protocol:', protocol);
+            console.log('- GitHub Pages:', isGitHubPages);
+            console.log('- Localhost:', isLocalhost);
+            console.log('- User Agent:', navigator.userAgent);
+            console.log('- Speech Synthesis supported:', 'speechSynthesis' in window);
+            
+            return { isGitHubPages, isLocalhost, protocol };
+        }
+
+        // Call environment detection
+        const environment = detectEnvironment();
+
         // Game State
         let state = {
             selectedAvatar: null,
@@ -497,7 +517,10 @@
         // Initialize voices with retry mechanism and select the clearest, most child-friendly English voice
         function initializeVoices() {
             const voices = state.synth.getVoices();
+            console.log('Available voices:', voices.length, voices.map(v => `${v.name} (${v.lang})`));
+            
             if (voices.length === 0) {
+                console.log('No voices found, retrying...');
                 setTimeout(initializeVoices, 100);
                 return;
             }
@@ -510,7 +533,12 @@
                 { name: "Microsoft Hazel - English (United Kingdom)", lang: "en-GB" },
                 { name: "Microsoft Susan - English (United Kingdom)", lang: "en-GB" },
                 { name: "Microsoft Zira - English (United States)", lang: "en-US" },
-                { name: "Google US English", lang: "en-US" }
+                { name: "Google US English", lang: "en-US" },
+                { name: "Daniel", lang: "en-GB" },
+                { name: "Samantha", lang: "en-US" },
+                { name: "Alex", lang: "en-US" },
+                { name: "Karen", lang: "en-AU" },
+                { name: "Veena", lang: "en-IN" }
             ];
             
             // Try to find preferred voices first
@@ -520,7 +548,7 @@
                 if (foundVoice) {
                     state.voice = foundVoice;
                     console.log('Found preferred voice:', state.voice.name, state.voice.lang);
-                    document.getElementById('loading-message').style.display = 'none';
+                    updateLoadingMessage('Voice ready!', 'success');
                     return;
                 }
             }
@@ -529,18 +557,57 @@
             state.voice = voices.find(v => v.lang && v.lang.startsWith('en')) || voices[0];
             if (state.voice) {
                 console.log('Selected fallback voice:', state.voice.name, state.voice.lang);
-                document.getElementById('loading-message').style.display = 'none';
+                updateLoadingMessage('Voice ready!', 'success');
             } else {
                 console.warn('No suitable voice found, using browser default');
-                document.getElementById('loading-message').textContent = 'Voice not available. Quiz may not speak correctly.';
+                // Don't block the quiz - still allow it to start
+                state.voice = null;
+                updateLoadingMessage('Voice not optimal, but quiz will work!', 'warning');
             }
         }
 
-        // Initialize voices when they're loaded
-        if (state.synth.onvoiceschanged !== undefined) {
-            state.synth.onvoiceschanged = initializeVoices;
+        // Helper function to update loading message
+        function updateLoadingMessage(message, type = 'info') {
+            const loadingEl = document.getElementById('loading-message');
+            if (loadingEl) {
+                loadingEl.textContent = message;
+                loadingEl.style.backgroundColor = type === 'success' ? '#e8f5e9' : 
+                                                 type === 'warning' ? '#fff3e0' : '#f5f5f5';
+                loadingEl.style.color = type === 'success' ? '#2e7d32' : 
+                                       type === 'warning' ? '#ef6c00' : '#666';
+                
+                if (type === 'success') {
+                    setTimeout(() => {
+                        loadingEl.style.display = 'none';
+                    }, 2000);
+                }
+            }
         }
-        initializeVoices(); // Try initial load
+
+        // Initialize voices when they're loaded with better retry logic
+        let voiceInitAttempts = 0;
+        const maxVoiceInitAttempts = 50; // Try for up to 5 seconds
+
+        function tryInitializeVoices() {
+            voiceInitAttempts++;
+            initializeVoices();
+            
+            // If still no voices after many attempts, proceed anyway
+            if (voiceInitAttempts >= maxVoiceInitAttempts && state.synth.getVoices().length === 0) {
+                console.warn('Could not load any voices, proceeding without optimal speech synthesis');
+                updateLoadingMessage('Quiz ready! (Speech may not be optimal)', 'warning');
+                state.voice = null; // Will use browser default
+            }
+        }
+
+        if (state.synth.onvoiceschanged !== undefined) {
+            state.synth.onvoiceschanged = tryInitializeVoices;
+        }
+        tryInitializeVoices(); // Try initial load
+
+        // Retry voice loading after a delay (common fix for GitHub Pages)
+        setTimeout(tryInitializeVoices, 1000);
+        setTimeout(tryInitializeVoices, 3000);
 
         // Helper to check if a question is already in the list
         function isDuplicate(questions, newQuestion) {
@@ -591,23 +658,61 @@
             next() {
                 if (this.isSpeaking || this.queue.length === 0) return;
                 const { options, onEnd } = this.queue.shift();
-                const utter = new SpeechSynthesisUtterance(options.text);
-                utter.rate = options.rate || 1;
-                utter.pitch = options.pitch || 1;
-                utter.volume = options.volume || 1;
-                if (state.voice) utter.voice = state.voice;
-                this.isSpeaking = true;
-                utter.onend = () => {
+                
+                try {
+                    const utter = new SpeechSynthesisUtterance(options.text);
+                    utter.rate = options.rate || 0.9;
+                    utter.pitch = options.pitch || 1;
+                    utter.volume = options.volume || 1;
+                    
+                    // Set voice if available, otherwise let browser use default
+                    if (state.voice) {
+                        utter.voice = state.voice;
+                    }
+                    
+                    this.isSpeaking = true;
+                    
+                    utter.onend = () => {
+                        console.log('Speech ended successfully');
+                        this.isSpeaking = false;
+                        if (onEnd) onEnd();
+                        setTimeout(() => this.next(), 100); // Small delay between speeches
+                    };
+                    
+                    utter.onerror = (event) => {
+                        console.warn('Speech error:', event.error);
+                        this.isSpeaking = false;
+                        if (onEnd) onEnd();
+                        setTimeout(() => this.next(), 100);
+                    };
+                    
+                    // Add timeout fallback in case speech gets stuck
+                    const speechTimeout = setTimeout(() => {
+                        if (this.isSpeaking) {
+                            console.warn('Speech timeout, forcing next');
+                            state.synth.cancel();
+                            this.isSpeaking = false;
+                            if (onEnd) onEnd();
+                            this.next();
+                        }
+                    }, 15000); // 15 second timeout
+                    
+                    // Clear timeout when speech ends normally
+                    const originalOnEnd = utter.onend;
+                    utter.onend = (event) => {
+                        clearTimeout(speechTimeout);
+                        originalOnEnd(event);
+                    };
+                    
+                    console.log('Speaking:', options.text.substring(0, 50) + '...');
+                    state.synth.speak(utter);
+                    
+                } catch (error) {
+                    console.error('Speech synthesis error:', error);
                     this.isSpeaking = false;
                     if (onEnd) onEnd();
                     this.next();
-                };
-                utter.onerror = () => {
-                    this.isSpeaking = false;
-                    if (onEnd) onEnd();
-                    this.next();
-                };
-                state.synth.speak(utter);
+                }
             }
             clear() {
                 state.synth.cancel();
@@ -647,6 +752,13 @@
                 speechRate = 0.85;
             }
 
+            // Check if speech synthesis is working
+            if (!('speechSynthesis' in window) || (!state.voice && state.synth.getVoices().length === 0)) {
+                console.warn('Speech synthesis not available, using silent mode');
+                startSilentMode();
+                return;
+            }
+
             // First reading with delay to ensure it starts properly
             setTimeout(() => {
                 speechQueue.add({text: spokenText, rate: speechRate}, () => {
@@ -670,6 +782,45 @@
                     }, 1000);
                 });
             }, 500);
+        }
+
+        // Silent mode fallback when speech synthesis fails
+        function startSilentMode() {
+            console.log('Starting silent mode');
+            elements.timer.textContent = 'Read the question above, then answer below';
+            
+            // Add visual indicator for silent mode
+            const silentIndicator = document.createElement('div');
+            silentIndicator.id = 'silent-mode-indicator';
+            silentIndicator.style.cssText = `
+                background: #fff3e0;
+                color: #ef6c00;
+                padding: 8px;
+                text-align: center;
+                border-radius: 5px;
+                margin: 10px 0;
+                font-size: 0.9em;
+                border: 1px solid #ffcc02;
+            `;
+            silentIndicator.textContent = '🔇 Silent Mode: Read questions carefully!';
+            
+            // Remove any existing indicator
+            const existing = document.getElementById('silent-mode-indicator');
+            if (existing) existing.remove();
+            
+            // Insert before question text
+            elements.questionText.parentElement.insertBefore(silentIndicator, elements.questionText);
+            
+            // Enable input after a short delay to let user read
+            setTimeout(() => {
+                state.isReading = false;
+                elements.answerInput.disabled = false;
+                elements.answerInput.focus();
+                elements.timer.style.visibility = 'visible';
+                // Give more time in silent mode
+                const seconds = state.currentQuestion < 10 ? 8 : 15;
+                startTimer(seconds);
+            }, 2000);
         }
 
         // Start timer
@@ -886,11 +1037,8 @@
         });
 
         elements.startBtn.addEventListener('click', () => {
-            // Check if voice is initialized before starting
-            if (!state.voice) {
-                alert("Speech synthesis voices aren't ready yet. Please wait a moment and try again.");
-                return;
-            }
+            // Always allow the quiz to start - speech synthesis will work with browser defaults if needed
+            console.log('Starting quiz with voice:', state.voice ? state.voice.name : 'browser default');
             
             elements.introSection.style.display = 'none';
             elements.quizSection.style.display = 'block';
